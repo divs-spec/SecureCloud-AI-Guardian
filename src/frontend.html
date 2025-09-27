@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureCloud AI Guardian - Security Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff, #ff00ff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #00ff88;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .metric-card:hover::before {
+            left: 100%;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 212, 255, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #00d4ff, #ffffff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+
+        .events-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .events-container, .threats-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .event-item {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .event-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateX(5px);
+        }
+
+        .event-severity {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .severity-critical { background: #ff4757; }
+        .severity-high { background: #ff6b47; }
+        .severity-medium { background: #ffa502; }
+        .severity-low { background: #26de81; }
+
+        .threat-item {
+            background: rgba(255, 68, 87, 0.1);
+            border: 1px solid rgba(255, 68, 87, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .threat-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #ff4757;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .ai-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .ai-model-card {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .ai-model-name {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .ai-model-status {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #00d4ff, #ff00ff);
+            border: none;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-left: auto;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        .alert-banner {
+            background: linear-gradient(135deg, #ff4757, #ff6b47);
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: alertPulse 2s infinite;
+        }
+
+        @keyframes alertPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); }
+        }
+
+        .cloud-coverage {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .cloud-provider {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .provider-aws { border-left: 4px solid #ff9500; }
+        .provider-azure { border-left: 4px solid #0078d4; }
+        .provider-gcp { border-left: 4px solid #4285f4; }
+
+        @media (max-width: 768px) {
+            .charts-grid, .events-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard {
+                padding: 1rem;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">🛡️ SecureCloud AI Guardian</div>
+        <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span>System Active</span>
+        </div>
+        <button class="refresh-btn" onclick="refreshDashboard()">🔄 Refresh</button>
+    </header>
+
+    <main class="dashboard">
+        <!-- Alert Banner (shown when critical threats detected) -->
+        <div class="alert-banner" id="alertBanner" style="display: none;">
+            <span>🚨</span>
+            <div>
+                <strong>Critical Security Alert!</strong>
+                <div id="alertMessage">Multiple high-severity threats detected</div>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value" id="totalResources">247</div>
+                <div class="metric-label">Total Resources</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="activeThreats">3</div>
+                <div class="metric-label">Active Threats</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="recentEvents">12</div>
+                <div class="metric-label">Events (24h)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="highRiskResources">8</div>
+                <div class="metric-label">High Risk Resources</div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="charts-grid">
+            <div class="chart-container">
+                <h3 class="chart-title">📊 Threat Timeline (24h)</h3>
+                <canvas id="threatTimelineChart" width="400" height="200"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">🎯 Threat Distribution</h3>
+                <canvas id="threatDistributionChart" width="300" height="300"></canvas>
+            </div>
+        </section>
+
+        <!-- Events and Threats Section -->
+        <section class="events-section">
+            <div class="events-container">
+                <h3 class="chart-title">🚨 Recent Security Events</h3>
+                <div id="eventsList">
+                    <!-- Events will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="threats-container">
+                <h3 class="chart-title">⚠️ Active Threats</h3>
+                <div id="threatsList">
+                    <!-- Threats will be populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Cloud Coverage -->
+        <section class="chart-container">
+            <h3 class="chart-title">☁️ Multi-Cloud Coverage</h3>
+            <div class="cloud-coverage">
+                <div class="cloud-provider provider-aws">
+                    <span>🟧</span> AWS (127 resources)
+                </div>
+                <div class="cloud-provider provider-azure">
+                    <span>🔵</span> Azure (89 resources)
+                </div>
+                <div class="cloud-provider provider-gcp">
+                    <span>🔴</span> GCP (31 resources)
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Models Status -->
+        <section class="ai-status">
+            <h3 class="chart-title" style="grid-column: 1 / -1;">🤖 AI Model Health</h3>
+            <div class="ai-model-card">
+                <div class="ai-model-name">Network Anomaly</div>
+                <div class="ai-model-status">✅ Healthy (98.2% accuracy)</div>
+            </div>
+            <div class="ai-model-card">
+                <div class="ai-model-name">User Behavior</div>
+                <div class="ai-model-status">✅ Healthy (96.7% accuracy)</div>
+            </div>
+            <div class="ai-model-card">
+                <div class="ai-model-name">Malware Detection</div>
+                <div class="ai-model-status">⚠️ Model Drift (0.31)</div>
+            </div>
+            <div class="ai-model-card">
+                <div class="ai-model-name">Config Drift</div>
+                <div class="ai-model-status">✅ Healthy (94.1% accuracy)</div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Sample data - in real implementation, this would come from API
+        let dashboardData = {
+            totalResources: 247,
+            activeThreats: 3,
+            recentEvents: 12,
+            highRiskResources: 8,
+            events: [
+                {
+                    id: 1,
+                    type: "LOGIN_ATTEMPT",
+                    severity: "HIGH",
+                    description: "Multiple failed login attempts from suspicious IP",
+                    timestamp: "2 minutes ago",
+                    source: "192.168.1.142"
+                },
+                {
+                    id: 2,
+                    type: "CONFIG_CHANGE",
+                    severity: "MEDIUM",
+                    description: "Security group configuration modified",
+                    timestamp: "5 minutes ago",
+                    source: "admin@company.com"
+                },
+                {
+                    id: 3,
+                    type: "DATA_ACCESS",
+                    severity: "CRITICAL",
+                    description: "Unauthorized access to sensitive database",
+                    timestamp: "8 minutes ago",
+                    source: "10.0.1.55"
+                },
+                {
+                    id: 4,
+                    type: "NETWORK_ACCESS",
+                    severity: "LOW",
+                    description: "New device connected to network",
+                    timestamp: "12 minutes ago",
+                    source: "192.168.1.201"
+                },
+                {
+                    id: 5,
+                    type: "MODEL_DRIFT",
+                    severity: "HIGH",
+                    description: "AI model drift detected in malware detection",
+                    timestamp: "15 minutes ago",
+                    source: "AI System"
+                }
+            ],
+            threats: [
+                {
+                    id: 1,
+                    name: "Brute Force Attack Campaign",
+                    confidence: 0.94,
+                    description: "Coordinated login attempts from multiple IPs",
+                    affected_resources: 12
+                },
+                {
+                    id: 2,
+                    name: "Data Exfiltration Pattern",
+                    confidence: 0.87,
+                    description: "Unusual data access patterns detected",
+                    affected_resources: 3
+                },
+                {
+                    id: 3,
+                    name: "Insider Threat Activity",
+                    confidence: 0.72,
+                    description: "Employee accessing restricted resources",
+                    affected_resources: 7
+                }
+            ]
+        };
+
+        // Initialize dashboard
+        function initializeDashboard() {
+            updateMetrics();
+            createThreatTimelineChart();
+            createThreatDistributionChart();
+            renderEvents();
+            renderThreats();
+            
+            // Show alert banner if critical threats
+            const criticalEvents = dashboardData.events.filter(e => e.severity === 'CRITICAL');
+            if (criticalEvents.length > 0) {
+                showAlertBanner(`${criticalEvents.length} critical security events require immediate attention`);
+            }
+        }
+
+        function updateMetrics() {
+            document.getElementById('totalResources').textContent = dashboardData.totalResources;
+            document.getElementById('activeThreats').textContent = dashboardData.activeThreats;
+            document.getElementById('recentEvents').textContent = dashboardData.recentEvents;
+            document.getElementById('highRiskResources').textContent = dashboardData.highRiskResources;
+        }
+
+        function showAlertBanner(message) {
+            const banner = document.getElementById('alertBanner');
+            const messageEl = document.getElementById('alertMessage');
+            messageEl.textContent = message;
+            banner.style.display = 'flex';
+        }
+
+        function createThreatTimelineChart() {
+            const ctx = document.getElementById('threatTimelineChart').getContext('2d');
+            
+            // Generate sample timeline data
+            const hours = Array.from({length: 24}, (_, i) => `${23-i}h ago`).reverse();
+            const threatCounts = Array.from({length: 24}, () => Math.floor(Math.random() * 10));
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hours,
+                    datasets: [{
+                        label: 'Security Events',
+                        data: threatCounts,
+                        borderColor: '#00d4ff',
+                        backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#ffffff',
+                                maxTicksLimit: 6
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: '#ffffff'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createThreatDistributionChart() {
+            const ctx = document.getElementById('threatDistributionChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Login Attempts', 'Config Changes', 'Data Access', 'Network Events', 'Model Issues'],
+                    datasets: [{
+                        data: [35, 20, 15, 20, 10],
+                        backgroundColor: [
+                            '#ff4757',
+                            '#ff6b47',
+                            '#ffa502',
+                            '#26de81',
+                            '#00d4ff'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#1a1a3e'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#ffffff',
+                                padding: 15,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderEvents() {
+            const eventsList = document.getElementById('eventsList');
+            eventsList.innerHTML = '';
+            
+            dashboardData.events.forEach(event => {
+                const eventItem = document.createElement('div');
+                eventItem.className = 'event-item';
+                
+                eventItem.innerHTML = `
+                    <div>
+                        <div style="font-weight: 600; margin-bottom: 0.3rem;">${event.description}</div>
+                        <div style="font-size: 0.9rem; opacity: 0.7;">
+                            ${event.type} • ${event.source} • ${event.timestamp}
+                        </div>
+                    </div>
+                    <div class="event-severity severity-${event.severity.toLowerCase()}">${event.severity}</div>
+                `;
+                
+                eventsList.appendChild(eventItem);
+            });
+        }
+
+        function renderThreats() {
+            const threatsList = document.getElementById('threatsList');
+            threatsList.innerHTML = '';
+            
+            dashboardData.threats.forEach(threat => {
+                const threatItem = document.createElement('div');
+                threatItem.className = 'threat-item';
+                
+                threatItem.innerHTML = `
+                    <div style="font-weight: 600; margin-bottom: 0.5rem;">${threat.name}</div>
+                    <div style="font-size: 0.9rem; margin-bottom: 0.5rem;">${threat.description}</div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; opacity: 0.8;">
+                        <span>Confidence: ${(threat.confidence * 100).toFixed(1)}%</span>
+                        <span>${threat.affected_resources} resources affected</span>
+                    </div>
+                `;
+                
+                threatsList.appendChild(threatItem);
+            });
+        }
+
+        function refreshDashboard() {
+            // Simulate data refresh
+            dashboardData.recentEvents = Math.floor(Math.random() * 20) + 5;
+            dashboardData.activeThreats = Math.floor(Math.random() * 8) + 1;
+            dashboardData.highRiskResources = Math.floor(Math.random() * 15) + 3;
+            
+            // Add new event
+            const eventTypes = ['LOGIN_ATTEMPT', 'DATA_ACCESS', 'CONFIG_CHANGE', 'NETWORK_ACCESS'];
+            const severities = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+            const newEvent = {
+                id: Date.now(),
+                type: eventTypes[Math.floor(Math.random() * eventTypes.length)],
+                severity: severities[Math.floor(Math.random() * severities.length)],
+                description: "New security event detected",
+                timestamp: "Just now",
+                source: `192.168.1.${Math.floor(Math.random() * 255)}`
+            };
+            
+            dashboardData.events.unshift(newEvent);
+            if (dashboardData.events.length > 5) {
+                dashboardData.events.pop();
+            }
+            
+            // Update display
+            updateMetrics();
+            renderEvents();
+            
+            // Show refresh animation
+            const btn = event.target;
+            btn.style.transform = 'rotate(360deg)';
+            setTimeout(() => {
+                btn.style.transform = 'rotate(0deg)';
+            }, 500);
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(refreshDashboard, 30000);
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
+    </script>
+</body>
+</html>
