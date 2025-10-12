@@ -5,6 +5,7 @@ An AI-powered, multi-cloud security orchestration platform with integrated model
 **1. Multi-Cloud Security Fabric**
 
 Cloud Connectors (AWS/Azure/GCP) → Security Data Lake (Normalized Logs/Metrics)→ AI Analysis Engine ( ML Models) → Response Orchestrator(Automated Actions)
+
 **2. Integrated AI Model Safety Layer**
 
 Model Integrity Monitoring: Continuously validate AI models used within the platform itself
