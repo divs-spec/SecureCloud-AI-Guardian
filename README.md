@@ -22,26 +22,35 @@ AI-Enhanced IOCs: Use ML to predict and identify emerging threat indicators
 **Backend Core:**
 
 Python/FastAPI for main orchestration services
+
 Apache Kafka for real-time data streaming
+
 Redis for caching and session management
+
 PostgreSQL for structured data, ClickHouse for time-series security logs
 
 **AI/ML Components:**
 
 TensorFlow/PyTorch for custom threat detection models
+
 scikit-learn for behavioral analysis
+
 ONNX for model interoperability and safety validation
+
 MLflow for model versioning and monitoring
 
 **Cloud Integration:**
 
 Boto3 (AWS), Azure SDK, Google Cloud Client Libraries
+
 Terraform for infrastructure as code
+
 Docker/Kubernetes for containerized deployment
 
 **Frontend:**
 
 React.js with D3.js for real-time security dashboards
+
 WebSocket connections for live threat feeds
 
 ## Key Features That Showcase All Three Areas
