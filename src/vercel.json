@@ -1,8 +1,10 @@
 {
   "functions": {
     "api/index.py": {
-      "runtime": "python3.11",
-      "handler": "main:app"
+      "runtime": "python3.11"
     }
-  }
+  },
+  "routes": [
+    { "src": "/.*", "dest": "api/index.py" }
+  ]
 }
