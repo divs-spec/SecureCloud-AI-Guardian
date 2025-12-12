@@ -7,8 +7,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      REDIS_URL: redis://redis:6379/0
-      POSTGRES_URL: postgresql://guardian:${POSTGRES_PASSWORD}@postgres:5432/securecloud
+      - REDIS_URL=redis://redis:6379/0
+      - POSTGRES_URL=postgresql://guardian:${POSTGRES_PASSWORD}@postgres:5432/securecloud
     depends_on:
       - redis
       - postgres
@@ -44,10 +44,19 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-    restart: unless-stopped
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     depends_on:
       - securecloud-api
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: securecloud-alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana:latest
@@ -58,9 +67,16 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN}
     volumes:
       - grafana_data:/var/lib/grafana
-    restart: unless-stopped
     depends_on:
       - prometheus
+    restart: unless-stopped
+
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
 
 volumes:
   redis_data:
