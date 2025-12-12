@@ -3,11 +3,12 @@ version: '3.8'
 services:
   securecloud-api:
     build: .
+    container_name: securecloud-api
     ports:
       - "8000:8000"
     environment:
-      - REDIS_URL=redis://redis:6379/0
-      - POSTGRES_URL=postgresql://guardian:password@postgres:5432/securecloud
+      REDIS_URL: redis://redis:6379/0
+      POSTGRES_URL: postgresql://guardian:${POSTGRES_PASSWORD}@postgres:5432/securecloud
     depends_on:
       - redis
       - postgres
@@ -17,6 +18,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    container_name: securecloud-redis
     ports:
       - "6379:6379"
     volumes:
@@ -25,10 +27,11 @@ services:
 
   postgres:
     image: postgres:15-alpine
+    container_name: securecloud-postgres
     environment:
-      - POSTGRES_DB=securecloud
-      - POSTGRES_USER=guardian
-      - POSTGRES_PASSWORD=password
+      POSTGRES_DB: securecloud
+      POSTGRES_USER: guardian
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -37,21 +40,27 @@ services:
 
   prometheus:
     image: prom/prometheus:latest
+    container_name: securecloud-prometheus
     ports:
       - "9090:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
     restart: unless-stopped
+    depends_on:
+      - securecloud-api
 
   grafana:
     image: grafana/grafana:latest
+    container_name: securecloud-grafana
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN}
     volumes:
       - grafana_data:/var/lib/grafana
     restart: unless-stopped
+    depends_on:
+      - prometheus
 
 volumes:
   redis_data:
