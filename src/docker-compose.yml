@@ -77,8 +77,3 @@ services:
     ports:
       - "9100:9100"
     restart: unless-stopped
-
-volumes:
-  redis_data:
-  postgres_data:
-  grafana_data:
