@@ -224,3 +224,17 @@ curl -X POST "http://localhost:8000/api/ai-models/network_anomaly/retrain"
 - **Mobile App**: Mobile dashboard for security teams
 - **Edge Computing**: Distributed threat detection
 - **Blockchain**: Immutable security audit logs
+
+## 🎬 Watch the Project in Action
+
+If you prefer a visual explanation, this YouTube video provides a concise yet detailed walkthrough of the project, including design decisions and real-time execution:
+
+[![Project Demo Video](https://img.youtube.com/vi/ZCe_bt8IwKE/maxresdefault.jpg)](https://youtu.be/ZCe_bt8IwKE?si=hrkh0uYZNAG0egCq)
+
+Click the image above to watch a complete demonstration of the project.
+
+This video covers:
+- Project motivation and problem statement  
+- Core features and system design  
+- Live execution and results  
+- Key technical decisions
